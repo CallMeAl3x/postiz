@@ -15,6 +15,8 @@ services:
         condition: service_healthy
       postiz-redis:
         condition: service_healthy
+      temporal:
+        condition: service_started
 
   postiz-postgres:
     image: postgres:17-alpine
@@ -95,7 +97,8 @@ services:
       - ENABLE_ES=true
       - ES_SEEDS=temporal-elasticsearch
       - ES_VERSION=v7
-      - TEMPORAL_NAMESPACE=default
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
     networks:
       - postiz-network
     entrypoint: ["/bin/sh", "-c", "printf 'limit.maxIDLength:\n  - value: 255\n    constraints: {}\n' > /tmp/dynamicconfig.yaml && exec /etc/temporal/entrypoint.sh"]
