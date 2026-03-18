@@ -95,15 +95,14 @@ services:
       - POSTGRES_USER=temporal
       - POSTGRES_PWD=temporal
       - POSTGRES_SEEDS=temporal-postgresql
-      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+      - DYNAMIC_CONFIG_FILE_PATH=/tmp/dynamicconfig.yaml
       - ENABLE_ES=true
       - ES_SEEDS=temporal-elasticsearch
       - ES_VERSION=v7
       - TEMPORAL_NAMESPACE=default
-      - SKIP_DYNAMIC_CONFIG_CHECK=true
     networks:
       - temporal-network
-    entrypoint: ["/bin/sh", "-c", "mkdir -p /etc/temporal/config/dynamicconfig && echo 'limit.maxIDLength:\n  - value: 255\n    constraints: {}' > /etc/temporal/config/dynamicconfig/development-sql.yaml && exec /etc/temporal/entrypoint.sh"]
+    entrypoint: ["/bin/sh", "-c", "printf 'limit.maxIDLength:\n  - value: 255\n    constraints: {}\n' > /tmp/dynamicconfig.yaml && exec /etc/temporal/entrypoint.sh"]
     expose:
       - 7233
 
