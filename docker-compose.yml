@@ -1,10 +1,9 @@
 services:
   postiz:
     image: ghcr.io/gitroomhq/postiz-app:latest
-    container_name: postiz
+
     restart: always
-    env_file:
-      - .env
+
     volumes:
       - postiz-config:/config/
       - postiz-uploads:/uploads/
@@ -21,7 +20,7 @@ services:
 
   postiz-postgres:
     image: postgres:17-alpine
-    container_name: postiz-postgres
+
     restart: always
     environment:
       POSTGRES_PASSWORD: postiz-password
@@ -39,7 +38,7 @@ services:
 
   postiz-redis:
     image: redis:7.2
-    container_name: postiz-redis
+
     restart: always
     healthcheck:
       test: redis-cli ping
@@ -54,7 +53,7 @@ services:
   # --- Temporal Stack (required for scheduling) ---
 
   temporal-elasticsearch:
-    container_name: temporal-elasticsearch
+
     image: elasticsearch:7.17.27
     environment:
       - cluster.routing.allocation.disk.threshold_enabled=true
@@ -72,7 +71,7 @@ services:
       - temporal-es-data:/usr/share/elasticsearch/data
 
   temporal-postgresql:
-    container_name: temporal-postgresql
+
     image: postgres:16
     environment:
       POSTGRES_PASSWORD: temporal
@@ -85,7 +84,7 @@ services:
       - temporal-pg-data:/var/lib/postgresql/data
 
   temporal:
-    container_name: temporal
+
     image: temporalio/auto-setup:1.28.1
     depends_on:
       - temporal-postgresql
@@ -105,19 +104,19 @@ services:
       - temporal-network
     volumes:
       - ./dynamicconfig:/etc/temporal/config/dynamicconfig
-    ports:
-      - "7233:7233"
+    expose:
+      - 7233
 
   temporal-ui:
-    container_name: temporal-ui
+
     image: temporalio/ui:2.34.0
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
       - TEMPORAL_CORS_ORIGINS=http://127.0.0.1:3000
     networks:
       - temporal-network
-    ports:
-      - "8080:8080"
+    expose:
+      - 8080
 
 volumes:
   postgres-volume:
