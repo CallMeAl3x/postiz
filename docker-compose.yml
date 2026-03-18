@@ -1,9 +1,8 @@
 services:
   postiz:
     image: ghcr.io/gitroomhq/postiz-app:latest
-
     restart: always
-
+    hostname: postiz
     volumes:
       - postiz-config:/config/
       - postiz-uploads:/uploads/
@@ -11,7 +10,6 @@ services:
       - "4007:5000"
     networks:
       - postiz-network
-      - temporal-network
     depends_on:
       postiz-postgres:
         condition: service_healthy
@@ -20,8 +18,8 @@ services:
 
   postiz-postgres:
     image: postgres:17-alpine
-
     restart: always
+    hostname: postiz-postgres
     environment:
       POSTGRES_PASSWORD: postiz-password
       POSTGRES_USER: postiz-user
@@ -38,8 +36,8 @@ services:
 
   postiz-redis:
     image: redis:7.2
-
     restart: always
+    hostname: postiz-redis
     healthcheck:
       test: redis-cli ping
       interval: 10s
@@ -50,11 +48,9 @@ services:
     networks:
       - postiz-network
 
-  # --- Temporal Stack (required for scheduling) ---
-
   temporal-elasticsearch:
-
     image: elasticsearch:7.17.27
+    hostname: temporal-elasticsearch
     environment:
       - cluster.routing.allocation.disk.threshold_enabled=true
       - cluster.routing.allocation.disk.watermark.low=512mb
@@ -64,28 +60,28 @@ services:
       - ES_JAVA_OPTS=-Xms256m -Xmx256m
       - xpack.security.enabled=false
     networks:
-      - temporal-network
+      - postiz-network
     expose:
       - 9200
     volumes:
       - temporal-es-data:/usr/share/elasticsearch/data
 
   temporal-postgresql:
-
     image: postgres:16
+    hostname: temporal-postgresql
     environment:
       POSTGRES_PASSWORD: temporal
       POSTGRES_USER: temporal
     networks:
-      - temporal-network
+      - postiz-network
     expose:
       - 5432
     volumes:
       - temporal-pg-data:/var/lib/postgresql/data
 
   temporal:
-
     image: temporalio/auto-setup:1.28.1
+    hostname: temporal
     depends_on:
       - temporal-postgresql
       - temporal-elasticsearch
@@ -101,19 +97,19 @@ services:
       - ES_VERSION=v7
       - TEMPORAL_NAMESPACE=default
     networks:
-      - temporal-network
+      - postiz-network
     entrypoint: ["/bin/sh", "-c", "printf 'limit.maxIDLength:\n  - value: 255\n    constraints: {}\n' > /tmp/dynamicconfig.yaml && exec /etc/temporal/entrypoint.sh"]
     expose:
       - 7233
 
   temporal-ui:
-
     image: temporalio/ui:2.34.0
+    hostname: temporal-ui
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
       - TEMPORAL_CORS_ORIGINS=http://127.0.0.1:3000
     networks:
-      - temporal-network
+      - postiz-network
     expose:
       - 8080
 
@@ -127,6 +123,3 @@ volumes:
 
 networks:
   postiz-network:
-  temporal-network:
-    driver: bridge
-    name: temporal-network
