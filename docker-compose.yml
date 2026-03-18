@@ -6,8 +6,8 @@ services:
     volumes:
       - postiz-config:/config/
       - postiz-uploads:/uploads/
-    ports:
-      - "4007:5000"
+    expose:
+      - 5000
     networks:
       - postiz-network
     depends_on:
